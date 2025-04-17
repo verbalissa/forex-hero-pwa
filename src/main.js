@@ -1,25 +1,43 @@
-document.getElementById('app').innerHTML = `
-  <h1>匯率英雄</h1>
-  <p>輸入金額，自動換算：</p>
-  <input type="number" id="amount" placeholder="輸入金額 TWD" />
-  <div id="results"></div>
-`;
-
-const rates = {
-  USD: 0.032,
-  JPY: 4.5,
-  CNY: 0.23
+let rates = {
+  usdTwd: 32,
+  usdJpy: 150,
+  usdCny: 7
 };
 
-document.getElementById('amount').addEventListener('input', (e) => {
-  const val = parseFloat(e.target.value);
-  if (!isNaN(val)) {
-    document.getElementById('results').innerHTML = `
-      <p>USD: ${(val * rates.USD).toFixed(2)}</p>
-      <p>JPY: ${(val * rates.JPY).toFixed(2)}</p>
-      <p>CNY: ${(val * rates.CNY).toFixed(2)}</p>
-    `;
-  } else {
-    document.getElementById('results').innerHTML = "";
+const getRate = (from, to) => {
+  if (from === to) return 1;
+  if (from === "TWD" && to === "CNY") return rates.usdCny / rates.usdTwd;
+  if (from === "CNY" && to === "TWD") return rates.usdTwd / rates.usdCny;
+  if (from === "USD") return 1 / rates["usd" + to];
+  if (to === "USD") return rates["usd" + from];
+  return getRate(from, "USD") * getRate("USD", to);
+};
+
+document.getElementById("update").onclick = async () => {
+  try {
+    const res = await fetch("https://tw.rter.info/capi.php");
+    const json = await res.json();
+    rates.usdTwd = json["USDTWD"].Exrate;
+    rates.usdJpy = json["USDJPY"].Exrate;
+    rates.usdCny = json["USDCNY"].Exrate;
+    alert("已更新匯率");
+  } catch (e) {
+    alert("更新失敗");
   }
-});
+};
+
+document.getElementById("amount").oninput = convert;
+document.getElementById("from").onchange = convert;
+document.getElementById("to").onchange = convert;
+
+function convert() {
+  const amount = parseFloat(document.getElementById("amount").value);
+  const from = document.getElementById("from").value;
+  const to = document.getElementById("to").value;
+  if (!isNaN(amount)) {
+    const rate = getRate(from, to);
+    document.getElementById("result").innerText = `結果：${(amount * rate).toFixed(4)} ${to}`;
+  } else {
+    document.getElementById("result").innerText = "";
+  }
+}

@@ -4,7 +4,7 @@
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "description": "四角匯率換算工具",
+  "description": "即時匯率換算工具",
   "icons": [
     {
       "src": "icon.png",
